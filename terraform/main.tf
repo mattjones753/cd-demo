@@ -3,7 +3,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region  = "${var.aws_region}"
   version = "= 1.15.0"
 
   assume_role {
@@ -34,11 +34,15 @@ resource "aws_api_gateway_method" "hello_world_api_method" {
 }
 
 resource "aws_api_gateway_integration" "hello_world_api_integration" {
-  http_method = "POST"
+  http_method = "${aws_api_gateway_method.hello_world_api_method.http_method}"
   resource_id = "${aws_api_gateway_resource.hello_world_api_resource.id}"
   rest_api_id = "${aws_api_gateway_rest_api.hello_world_api.id}"
-  type        = "AWS_PROXY"
-  uri         = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/${aws_lambda_function.lambda.arn}/invocations"
+
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_TEXT"
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/${aws_lambda_function.lambda.arn}/invocations"
 }
 
 resource "aws_lambda_permission" "api_gateway_lambda" {
@@ -59,16 +63,12 @@ resource "aws_lambda_function" "lambda" {
   source_code_hash = "${base64sha256(file(local.path_to_lambda_artifact))}"
 
   environment {
-    DATABASE_ENDPOINT = "${aws_db_instance.database.endpoint}"
-    DATABASE_USER     = "${aws_db_instance.database.username}"
-    DATABASE_PASSWORD = "${aws_db_instance.database.password}"
+    variables = {
+      DATABASE_ENDPOINT = "${aws_db_instance.database.endpoint}"
+      DATABASE_USER     = "${aws_db_instance.database.username}"
+      DATABASE_PASSWORD = "${aws_db_instance.database.password}"
+    }
   }
-}
-
-resource "aws_api_gateway_stage" "hello_world_api_stage" {
-  deployment_id = "${aws_api_gateway_deployment.hello_world_api_deployment.id}"
-  rest_api_id = "${aws_api_gateway_rest_api.hello_world_api.id}"
-  stage_name = "release"
 }
 
 resource "aws_api_gateway_deployment" "hello_world_api_deployment" {
@@ -82,22 +82,38 @@ resource "aws_api_gateway_deployment" "hello_world_api_deployment" {
   }
 }
 
-data "aws_iam_policy_document" "lambda_policy_doc" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    effect  = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-  }
-}
+//data "aws_iam_policy_document" "lambda_policy_doc" {
+//  statement {
+//    actions = ["sts:AssumeRole"]
+//    effect  = "Allow"
+//
+//    resources = []
+//
+//    principals {
+//      type        = "Service"
+//      identifiers = ["lambda.amazonaws.com"]
+//    }
+//  }
+//}
 
 resource "aws_iam_role" "lambda_role" {
   name = "hello_world_lambda_role"
 
-  assume_role_policy = "${data.aws_iam_policy_document.lambda_policy_doc.json}"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_db_instance" "database" {

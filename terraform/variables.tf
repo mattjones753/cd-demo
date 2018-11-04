@@ -1,6 +1,6 @@
 variable "aws_region" {
   description = "the AWS region to deploy infrastructure in"
-  default = "eu-west-1"
+  default     = "eu-west-2"
 }
 
 variable "aws_account_id" {
@@ -8,11 +8,11 @@ variable "aws_account_id" {
 }
 
 variable "aws_deployment_role_arn" {
-  default = ""
+  default     = ""
   description = "The IAM role to use when executing deployment"
 }
 
 variable "artifact_directory" {
   description = "where the go artifacts can be found"
-  default = "../bin/"
+  default     = "../bin/"
 }
