@@ -1,0 +1,77 @@
+#go get -u github.com/golang/dep/cmd/dep
+
+jobs:
+- name: build_partner_shared_lambdas
+  public: true
+  plan:
+  - get: git_repo
+    version: latest
+    trigger: true
+  - get: golang_build_docker_image
+  - task: build
+    config:
+      platform: linux
+      run:
+        path: sh
+        args:
+        - -ec
+        - |
+          ARTIFACT_DIR=$(pwd)/artifacts
+          mkdir -p $GOPATH/src/github.com/mattjones753/
+          cp -R git_repo $GOPATH/src/github.com/mattjones753/cd-demo
+          cd $GOPATH/src/github.com/mattjones753/cd-demo
+          apt-get update -y && apt-get install -y zip
+          make all
+          cp -R bin/*.zip $ARTIFACT_DIR
+      inputs:
+      - name: git_repo
+        path: ""
+      outputs:
+      - name: artifacts
+    image: golang_build_docker_image
+  - task: publish-lambda-artifacts
+    config:
+      platform: linux
+      inputs:
+      - name: git_repo
+        path: ""
+      - name: artifacts
+        path: ""
+      params:
+        TF_VAR_aws_deployment_role_arn: ((aws_deployment_role))
+        TF_VAR_aws_region: ((aws_region))
+        TF_VAR_aws_account_id: ((aws_account_id))
+        TERRAFORM_BACKEND_BUCKET: ((terraform_backend_bucket))
+        TERRAFORM_BACKEND_KEY: ((terraform_backend_key))
+      run:
+        path: sh
+        args:
+        - -ec
+        - |
+          export TF_VAR_artifact_directory=$(pwd)/artifacts
+          cd git_repo/terraform
+          terraform init \
+            -backend-config="role_arn=${TF_VAR_execution_role_arn}" \
+            -backend-config="bucket=${TERRAFORM_BACKEND_BUCKET}" \
+            -backend-config="key=${TERRAFORM_BACKEND_KEY}" \
+            -backend-config="region=${TF_VAR_aws_region}"
+          terraform apply -input=false -auto-approve
+    image: terraform_docker_image
+
+
+resources:
+- name: git_repo
+  type: git
+  source:
+    branch: master
+    uri: https://github.com/mattjones753/cd-demo
+- name: golang_build_docker_image
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.10
+- name: terraform_docker_image
+  type: docker-image
+  source:
+    repository: hashicorp/terraform
+    tag: 0.11.8
