@@ -7,22 +7,31 @@ resource "aws_api_gateway_rest_api" "hello_world_api" {
   description = "Hello World API"
 }
 
-resource "aws_api_gateway_resource" "hello_world_api_resource" {
+resource "aws_api_gateway_resource" "hello_world_root_api_resource" {
   rest_api_id = "${aws_api_gateway_rest_api.hello_world_api.id}"
   parent_id   = "${aws_api_gateway_rest_api.hello_world_api.root_resource_id}"
   path_part   = "hello"
 }
+resource "aws_api_gateway_resource" "injector_api_proxy_resource" {
+  rest_api_id = "${aws_api_gateway_rest_api.hello_world_api.id}"
+  parent_id   = "${aws_api_gateway_resource.hello_world_root_api_resource.id}"
+  path_part   = "{proxy+}"
+}
 
 resource "aws_api_gateway_method" "hello_world_api_method" {
   rest_api_id   = "${aws_api_gateway_rest_api.hello_world_api.id}"
-  resource_id   = "${aws_api_gateway_resource.hello_world_api_resource.id}"
+  resource_id   = "${aws_api_gateway_resource.injector_api_proxy_resource.id}"
   http_method   = "GET"
   authorization = "NONE"
+
+  request_parameters {
+    "method.request.path.proxy" = true
+  }
 }
 
 resource "aws_api_gateway_integration" "hello_world_api_integration" {
   http_method = "${aws_api_gateway_method.hello_world_api_method.http_method}"
-  resource_id = "${aws_api_gateway_resource.hello_world_api_resource.id}"
+  resource_id = "${aws_api_gateway_resource.injector_api_proxy_resource.id}"
   rest_api_id = "${aws_api_gateway_rest_api.hello_world_api.id}"
 
   passthrough_behavior    = "WHEN_NO_MATCH"
@@ -38,7 +47,7 @@ resource "aws_lambda_permission" "api_gateway_lambda" {
   function_name = "${aws_lambda_function.lambda.arn}"
   principal     = "apigateway.amazonaws.com"
 
-  source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.hello_world_api.id}/*/${aws_api_gateway_method.hello_world_api_method.http_method}${aws_api_gateway_resource.hello_world_api_resource.path}"
+  source_arn = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.hello_world_api.id}/*/${aws_api_gateway_method.hello_world_api_method.http_method}${aws_api_gateway_resource.injector_api_proxy_resource.path}"
 }
 
 resource "aws_lambda_function" "lambda" {
