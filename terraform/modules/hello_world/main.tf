@@ -103,6 +103,22 @@ resource "aws_iam_role" "lambda_role" {
 EOF
 }
 
+resource "aws_security_group" "allow_all" {
+  name        = "allow_all"
+  description = "Allow all inbound traffic"
+
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name = "allow_all"
+  }
+}
+
 resource "aws_db_instance" "database" {
   allocated_storage   = 10
   storage_type        = "gp2"
@@ -113,5 +129,6 @@ resource "aws_db_instance" "database" {
   username            = "dbadmin"
   password            = "rubbishpassword"
   skip_final_snapshot = "true"
-  publicly_accessible = "true"
+  publicly_accessible = "false"
+  vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
 }

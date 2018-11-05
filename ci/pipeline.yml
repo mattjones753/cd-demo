@@ -101,7 +101,7 @@ jobs:
             -backend-config="bucket=${TERRAFORM_BACKEND_BUCKET}" \
             -backend-config="key=${TERRAFORM_BACKEND_KEY}" \
             -backend-config="region=${TF_VAR_aws_region}"
-          terraform apply
+          terraform apply -input=false -auto-approve
 
           terraform output db_url > ${TERRAFORM_OUTPUT}/db_url
       outputs:
@@ -121,7 +121,7 @@ jobs:
         - -ec
         - |
           export DATABASE_URL=`cat $(pwd)/terraform_output/db_url`
-          flyway -configFile=git_repo/db/conf/flyway.conf -url ${DATABASE_URL} migrate
+          flyway -configFiles=git_repo/db/conf/flyway.conf -locations=filesystem:git_repo/db/sql/ -url=jdbc:${DATABASE_URL} migrate
 
 resources:
 - name: git_repo
@@ -143,7 +143,7 @@ resources:
   type: docker-image
   source:
     repository: boxfuse/flyway
-    tag: 5.2
+    tag: 5.1
 - name: aws_cli_image
   type: docker-image
   source:
