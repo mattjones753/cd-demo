@@ -7,10 +7,10 @@ jobs:
   - get: git_repo
     version: latest
     trigger: true
-  - get: golang_build_docker_image
-  - get: aws_cli_docker_image
+  - get: golang_build_image
+  - get: aws_cli_image
   - task: build
-    image: golang_build_docker_image
+    image: golang_build_image
     config:
       platform: linux
       inputs:
@@ -31,7 +31,7 @@ jobs:
       outputs:
       - name: artifacts
   - task: publish_artifacts
-    image: aws_cli_docker_image
+    image: aws_cli_image
     config:
       platform: linux
       inputs:
@@ -55,10 +55,11 @@ jobs:
     passed:
     - build
     trigger: true
-  - get: terraform_docker_image
-  - get: aws_cli_docker_image
+  - get: terraform_image
+  - get: aws_cli_image
+  - get: flyway_image
   - task: get_artifacts
-    image: aws_cli_docker_image
+    image: aws_cli_image
     config:
       platform: linux
       params:
@@ -73,7 +74,7 @@ jobs:
       outputs:
       - name: artifacts
   - task: deploy
-    image: terraform_docker_image
+    image: terraform_image
     config:
       platform: linux
       inputs:
@@ -93,13 +94,34 @@ jobs:
         - -ec
         - |
           export TF_VAR_artifact_directory=$(pwd)/artifacts
+          export TERRAFORM_OUTPUT=$(pwd)/terraform_output
           cd git_repo/terraform/providers/aws/deployment_environment
           terraform init \
             -backend-config="role_arn=${TF_VAR_aws_deployment_role_arn}" \
             -backend-config="bucket=${TERRAFORM_BACKEND_BUCKET}" \
             -backend-config="key=${TERRAFORM_BACKEND_KEY}" \
             -backend-config="region=${TF_VAR_aws_region}"
-          terraform plan
+          terraform apply
+
+          terraform output db_url > ${TERRAFORM_OUTPUT}/db_url
+      outputs:
+      - name: terraform_output
+  - task: db_migrate
+    image: flyway_image
+    config:
+      platform: linux
+      inputs:
+      - name: terraform_output
+        path: ""
+      - name: git_repo
+        path: ""
+      run:
+        path: sh
+        args:
+        - -ec
+        - |
+          export DATABASE_URL=`cat $(pwd)/terraform_output/db_url`
+          flyway -configFile=git_repo/db/conf/flyway.conf -url ${DATABASE_URL} migrate
 
 resources:
 - name: git_repo
@@ -107,17 +129,22 @@ resources:
   source:
     branch: master
     uri: https://github.com/mattjones753/cd-demo
-- name: terraform_docker_image
+- name: terraform_image
   type: docker-image
   source:
     repository: hashicorp/terraform
     tag: 0.11.10
-- name: golang_build_docker_image
+- name: golang_build_image
   type: docker-image
   source:
     repository: golang
     tag: 1.11
-- name: aws_cli_docker_image
+- name: flyway_image
+  type: docker-image
+  source:
+    repository: boxfuse/flyway
+    tag: 5.2
+- name: aws_cli_image
   type: docker-image
   source:
     repository: mesosphere/aws-cli
