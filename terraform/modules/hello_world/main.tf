@@ -54,6 +54,7 @@ resource "aws_lambda_function" "lambda" {
       DATABASE_ENDPOINT = "${aws_db_instance.database.endpoint}"
       DATABASE_USER     = "${aws_db_instance.database.username}"
       DATABASE_PASSWORD = "${aws_db_instance.database.password}"
+      DATABASE_NAME     = "${aws_db_instance.database.name}"
     }
   }
 }
@@ -68,20 +69,6 @@ resource "aws_api_gateway_deployment" "hello_world_api_deployment" {
     "answer" = "42"
   }
 }
-
-//data "aws_iam_policy_document" "lambda_policy_doc" {
-//  statement {
-//    actions = ["sts:AssumeRole"]
-//    effect  = "Allow"
-//
-//    resources = []
-//
-//    principals {
-//      type        = "Service"
-//      identifiers = ["lambda.amazonaws.com"]
-//    }
-//  }
-//}
 
 resource "aws_iam_role" "lambda_role" {
   name = "hello_world_lambda_role"

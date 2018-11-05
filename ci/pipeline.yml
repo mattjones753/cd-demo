@@ -86,7 +86,6 @@ jobs:
         TF_VAR_aws_deployment_role_arn: ((aws_deployment_role))
         TF_VAR_aws_region: ((aws_region))
         TF_VAR_aws_account_id: ((aws_account_id))
-        TF_VAR_aws_subnets: ((aws_subnets))
         TERRAFORM_BACKEND_BUCKET: ((terraform_backend_bucket))
         TERRAFORM_BACKEND_KEY: ((terraform_backend_key))
       run:
@@ -94,6 +93,7 @@ jobs:
         args:
         - -ec
         - |
+          export TF_VAR_aws_subnets='["subnet-097ea915cf4553693","subnet-08c412a31e1c70907","subnet-0c8fbac030695c103"]'
           export TF_VAR_artifact_directory=$(pwd)/artifacts
           export TERRAFORM_OUTPUT=$(pwd)/terraform_output
           cd git_repo/terraform/providers/aws/deployment_environment
@@ -122,7 +122,7 @@ jobs:
         - -ec
         - |
           export DATABASE_URL=`cat $(pwd)/terraform_output/db_url`
-          flyway -configFiles=git_repo/db/conf/flyway.conf -locations=filesystem:git_repo/db/sql/ -url=jdbc:${DATABASE_URL} migrate
+          flyway -configFiles=git_repo/db/conf/flyway.conf -locations=filesystem:git_repo/db/sql/ -url=jdbc:postgresql://${DATABASE_URL}/postgres_db migrate
 
 resources:
 - name: git_repo
