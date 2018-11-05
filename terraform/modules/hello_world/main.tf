@@ -1,16 +1,3 @@
-terraform {
-  backend "s3" {}
-}
-
-provider "aws" {
-  region  = "${var.aws_region}"
-  version = "= 1.15.0"
-
-  assume_role {
-    role_arn = "${var.aws_deployment_role_arn}"
-  }
-}
-
 locals {
   path_to_lambda_artifact = "${var.artifact_directory}/hello_world.zip"
 }

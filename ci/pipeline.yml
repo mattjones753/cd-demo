@@ -1,16 +1,21 @@
 #go get -u github.com/golang/dep/cmd/dep
 
 jobs:
-- name: build_partner_shared_lambdas
+- name: build
   public: true
   plan:
   - get: git_repo
     version: latest
     trigger: true
   - get: golang_build_docker_image
+  - get: aws_cli_docker_image
   - task: build
+    image: golang_build_docker_image
     config:
       platform: linux
+      inputs:
+      - name: git_repo
+        path: ""
       run:
         path: sh
         args:
@@ -23,13 +28,52 @@ jobs:
           apt-get update -y && apt-get install -y zip
           make all
           cp -R bin/*.zip $ARTIFACT_DIR
-      inputs:
-      - name: git_repo
-        path: ""
       outputs:
       - name: artifacts
-    image: golang_build_docker_image
-  - task: publish-lambda-artifacts
+  - task: publish_artifacts
+    image: aws_cli_docker_image
+    config:
+      platform: linux
+      inputs:
+      - name: artifacts
+        path: ""
+      params:
+        S3_LAMBDA_BUCKET: ((artifact_s3_bucket))
+        S3_LAMBDA_ARTIFACTS_KEY_PREFIX: ((artifact_s3_key_prefix))
+      run:
+        path: sh
+        args:
+        - -ec
+        - |
+          aws s3 cp artifacts s3://${S3_LAMBDA_BUCKET}/${S3_LAMBDA_ARTIFACTS_KEY_PREFIX}/ --recursive --exclude "*" --include "*.zip"
+
+- name: deploy
+  public: true
+  plan:
+  - get: git_repo
+    version: latest
+    passed:
+    - build
+    trigger: true
+  - get: terraform_docker_image
+  - get: aws_cli_docker_image
+  - task: get_artifacts
+    image: aws_cli_docker_image
+    config:
+      platform: linux
+      params:
+        S3_LAMBDA_BUCKET: ((artifact_s3_bucket))
+        S3_LAMBDA_ARTIFACTS_KEY_PREFIX: ((artifact_s3_key_prefix))
+      run:
+        path: sh
+        args:
+        - -ec
+        - |
+          aws s3 cp s3://${S3_LAMBDA_BUCKET}/${S3_LAMBDA_ARTIFACTS_KEY_PREFIX}/ ./artifacts/ --recursive --exclude "*" --include "*.zip"
+      outputs:
+      - name: artifacts
+  - task: deploy
+    image: terraform_docker_image
     config:
       platform: linux
       inputs:
@@ -49,15 +93,13 @@ jobs:
         - -ec
         - |
           export TF_VAR_artifact_directory=$(pwd)/artifacts
-          cd git_repo/terraform
+          cd git_repo/terraform/providers/aws/deployment_environment
           terraform init \
-            -backend-config="role_arn=${TF_VAR_execution_role_arn}" \
+            -backend-config="role_arn=${TF_VAR_aws_deployment_role_arn}" \
             -backend-config="bucket=${TERRAFORM_BACKEND_BUCKET}" \
             -backend-config="key=${TERRAFORM_BACKEND_KEY}" \
             -backend-config="region=${TF_VAR_aws_region}"
-          terraform apply -input=false -auto-approve
-    image: terraform_docker_image
-
+          terraform plan
 
 resources:
 - name: git_repo
@@ -65,13 +107,18 @@ resources:
   source:
     branch: master
     uri: https://github.com/mattjones753/cd-demo
-- name: golang_build_docker_image
-  type: docker-image
-  source:
-    repository: golang
-    tag: 1.10
 - name: terraform_docker_image
   type: docker-image
   source:
     repository: hashicorp/terraform
     tag: 0.11.10
+- name: golang_build_docker_image
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.11
+- name: aws_cli_docker_image
+  type: docker-image
+  source:
+    repository: mesosphere/aws-cli
+    tag: latest

@@ -2,3 +2,4 @@
 bin
 terraform/.terraform/
 vendor/
+ci/concourse_variables.yml
