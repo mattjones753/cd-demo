@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/River-Island/pgw-gopkgs/envs"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/mattjones753/cd-demo/src/db"
+	"log"
+	"os"
 	"path"
 	"regexp"
 )
@@ -28,10 +29,20 @@ func createHello(database db.Db) func(request *events.APIGatewayProxyRequest) (e
 }
 
 func main() {
-	dbUser := envs.MustGetEnv("DATABASE_USER")
-	dbPass := envs.MustGetEnv("DATABASE_PASSWORD")
-	dbHost := envs.MustGetEnv("DATABASE_ENDPOINT")
-	dbName := envs.MustGetEnv("DATABASE_NAME")
+	dbUser := mustGetEnv("DATABASE_USER")
+	dbPass := mustGetEnv("DATABASE_PASSWORD")
+	dbHost := mustGetEnv("DATABASE_ENDPOINT")
+	dbName := mustGetEnv("DATABASE_NAME")
 	database := db.NewDb(dbUser, dbHost, dbPass, dbName)
 	lambda.Start(createHello(database))
+}
+
+// mustGetEnv stops a process if it can't get an environment variable
+func mustGetEnv(key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		log.Fatalf("ENV VAR %q NOT SET", key)
+	}
+
+	return v
 }
