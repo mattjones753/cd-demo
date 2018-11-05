@@ -18,4 +18,5 @@ module "hello-world" {
   aws_account_id          = "${var.aws_account_id}"
   aws_deployment_role_arn = "${var.aws_deployment_role_arn}"
   artifact_directory      = "${var.artifact_directory}"
+  aws_subnets = ["${var.aws_subnets}"]
 }

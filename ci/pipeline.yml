@@ -86,6 +86,7 @@ jobs:
         TF_VAR_aws_deployment_role_arn: ((aws_deployment_role))
         TF_VAR_aws_region: ((aws_region))
         TF_VAR_aws_account_id: ((aws_account_id))
+        TF_VAR_aws_subnets: ((aws_subnets))
         TERRAFORM_BACKEND_BUCKET: ((terraform_backend_bucket))
         TERRAFORM_BACKEND_KEY: ((terraform_backend_key))
       run:

@@ -13,3 +13,8 @@ variable "aws_deployment_role_arn" {
 variable "artifact_directory" {
   description = "where the go artifacts can be found"
 }
+
+variable "aws_subnets" {
+  description = "the AWS subnets we are deploying into"
+  type = "list"
+}

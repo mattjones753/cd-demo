@@ -36,4 +36,6 @@ terraform_backend_key: path/to/terraform.tfstate
 artifact_s3_bucket: artifact-s3-bucket-name
 # s3 prefix for lambda artifacts
 artifact_s3_key_prefix: artifacts/prefix
+# aws subnets
+aws_subnets: "[subnet-1-id,subnet-2-id]"
 ```
