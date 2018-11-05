@@ -113,4 +113,5 @@ resource "aws_db_instance" "database" {
   username            = "dbadmin"
   password            = "rubbishpassword"
   skip_final_snapshot = "true"
+  publicly_accessible = "true"
 }
