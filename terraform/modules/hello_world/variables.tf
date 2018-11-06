@@ -14,7 +14,6 @@ variable "artifact_directory" {
   description = "where the go artifacts can be found"
 }
 
-variable "aws_subnets" {
-  description = "the AWS subnets we are deploying into"
-  type        = "list"
+variable "aws_vpc_id" {
+  description = "the id of the AWS VPC we are deploying into"
 }

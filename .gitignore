@@ -5,3 +5,4 @@ vendor/
 .vendor-new/
 ci/concourse_variables.yml
 Gopkg.lock
+*.patch

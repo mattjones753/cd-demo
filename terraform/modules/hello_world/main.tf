@@ -61,10 +61,10 @@ resource "aws_lambda_function" "lambda" {
 
   environment {
     variables = {
-      DATABASE_ENDPOINT = "${aws_db_instance.database.endpoint}"
-      DATABASE_USER     = "${aws_db_instance.database.username}"
-      DATABASE_PASSWORD = "${aws_db_instance.database.password}"
-      DATABASE_NAME     = "${aws_db_instance.database.name}"
+      DATABASE_ENDPOINT         = "${aws_db_instance.database.endpoint}"
+      DATABASE_USER             = "${aws_db_instance.database.username}"
+      DATABASE_PASSWORD         = "${aws_db_instance.database.password}"
+      DATABASE_NAME             = "${aws_db_instance.database.name}"
       ENABLE_BIRTHDAY_COUNTDOWN = "false"
     }
   }
@@ -104,6 +104,7 @@ EOF
 resource "aws_security_group" "allow_all" {
   name        = "allow_all"
   description = "Allow all inbound traffic"
+  vpc_id      = "${var.aws_vpc_id}"
 
   ingress {
     from_port   = 0
@@ -124,6 +125,16 @@ resource "aws_security_group" "allow_all" {
   }
 }
 
+data "aws_subnet_ids" "vpc_subnets" {
+  vpc_id = "${var.aws_vpc_id}"
+}
+
+resource "aws_db_subnet_group" "default" {
+  name        = "main_subnet_group"
+  description = "Our main group of subnets"
+  subnet_ids  = ["${data.aws_subnet_ids.vpc_subnets.ids}"]
+}
+
 resource "aws_db_instance" "database" {
   allocated_storage      = 10
   storage_type           = "gp2"
@@ -136,5 +147,6 @@ resource "aws_db_instance" "database" {
   skip_final_snapshot    = "true"
   publicly_accessible    = "true"
   vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
+  db_subnet_group_name   = "${aws_db_subnet_group.default.name}"
   apply_immediately      = "true"
 }
