@@ -141,4 +141,5 @@ resource "aws_db_instance" "database" {
   publicly_accessible = "false"
   db_subnet_group_name = "${aws_db_subnet_group.default.name}"
   vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
+  apply_immediately = "true"
 }
