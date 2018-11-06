@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/mattjones753/cd-demo/src/db"
 	"log"
 	"math"
@@ -55,7 +56,7 @@ func main() {
 	dbHost := mustGetEnv("DATABASE_ENDPOINT")
 	dbName := mustGetEnv("DATABASE_NAME")
 	database := db.NewDb(dbUser, dbHost, dbPass, dbName)
-	fmt.Println(createHello(database)(&events.APIGatewayProxyRequest{Path: "/hello/matt"}))
+	lambda.Start(createHello(database))
 }
 
 // mustGetEnv stops a process if it can't get an environment variable
