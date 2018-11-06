@@ -123,12 +123,6 @@ resource "aws_security_group" "allow_all" {
   }
 }
 
-resource "aws_db_subnet_group" "default" {
-  name        = "main_subnet_group"
-  description = "Our main group of subnets"
-  subnet_ids  = ["${var.aws_subnets}"]
-}
-
 resource "aws_db_instance" "database" {
   allocated_storage      = 10
   storage_type           = "gp2"
@@ -140,7 +134,6 @@ resource "aws_db_instance" "database" {
   password               = "rubbishpassword"
   skip_final_snapshot    = "true"
   publicly_accessible    = "true"
-  db_subnet_group_name   = "${aws_db_subnet_group.default.name}"
-//  vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
+  vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
   apply_immediately      = "true"
 }
