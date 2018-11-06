@@ -138,6 +138,6 @@ resource "aws_db_instance" "database" {
   username            = "dbadmin"
   password            = "rubbishpassword"
   skip_final_snapshot = "true"
-  publicly_accessible = "true"
+  publicly_accessible = "false"
   vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
 }
