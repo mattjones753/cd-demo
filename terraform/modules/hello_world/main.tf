@@ -106,6 +106,10 @@ data "aws_iam_policy_document" "lambda_execution_role_policy" {
       "ec2:DeleteNetworkInterface",
     ]
 
+    resources = [
+      "*"
+    ]
+
     effect = "Allow"
   }
 }
