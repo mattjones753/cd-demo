@@ -86,20 +86,45 @@ resource "aws_api_gateway_deployment" "hello_world_api_deployment" {
   }
 }
 
-resource "aws_iam_role" "lambda_role" {
-  name = "hello_world_lambda_role"
-
-  assume_role_policy = "${data.aws_iam_policy_document.lambda_role_policy.json}"
+resource "aws_iam_policy_attachment" "hello_world_lambda_policy_attachment" {
+  name       = "hello_world_lambda_role_execution_policy"
+  policy_arn = "${aws_iam_policy.lambda_execution_policy.arn}"
+  roles      = ["${aws_iam_role.lambda_role.id}"]
 }
 
-data "aws_iam_policy_document" "lambda_role_policy" {
+resource "aws_iam_policy" "lambda_execution_policy" {
+  name   = "hello_world_lambda_execution_policy"
+  policy = "${data.aws_iam_policy_document.lambda_execution_role_policy.json}"
+}
+
+data "aws_iam_policy_document" "lambda_execution_role_policy" {
   statement {
     actions = [
-      "sts:AssumeRole",
       "ec2:CreateNetworkInterface",
       "ec2:DescribeNetworkInterfaces",
       "ec2:DetachNetworkInterface",
       "ec2:DeleteNetworkInterface",
+    ]
+
+    principals {
+      identifiers = ["lambda.amazonaws.com"]
+      type = "Service"
+    }
+
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role" "lambda_role" {
+  name = "hello_world_lambda_role"
+
+  assume_role_policy = "${data.aws_iam_policy_document.lambda_assume_role_policy.json}"
+}
+
+data "aws_iam_policy_document" "lambda_assume_role_policy" {
+  statement {
+    actions = [
+      "sts:AssumeRole",
     ]
 
     principals {
