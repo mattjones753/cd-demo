@@ -140,6 +140,7 @@ resource "aws_db_instance" "database" {
   password               = "rubbishpassword"
   skip_final_snapshot    = "true"
   publicly_accessible    = "true"
+  db_subnet_group_name   = "${aws_db_subnet_group.default.name}"
   vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
   apply_immediately      = "true"
 }
