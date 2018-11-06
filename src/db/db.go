@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"time"
 )
 
 type Db interface {
@@ -16,7 +17,8 @@ type dbConn struct {
 }
 
 type User struct {
-	Name string `db:"name"`
+	Name        string    `db:"name"`
+	DateOfBirth time.Time `db:"date_of_birth"`
 }
 
 func NewDb(username, host, password, schema string) *dbConn {
@@ -36,7 +38,7 @@ func (db *dbConn) Select(username string) (*User, error) {
 		return nil, err
 	}
 	var users []User
-	database.Select(&users, `SELECT name FROM users where name = $1`, username)
+	database.Select(&users, `SELECT * FROM users where name = $1`, username)
 
 	if len(users) > 0 {
 		return &users[0], nil

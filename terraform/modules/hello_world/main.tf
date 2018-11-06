@@ -65,6 +65,7 @@ resource "aws_lambda_function" "lambda" {
       DATABASE_USER     = "${aws_db_instance.database.username}"
       DATABASE_PASSWORD = "${aws_db_instance.database.password}"
       DATABASE_NAME     = "${aws_db_instance.database.name}"
+      ENABLE_BIRTHDAY_COUNTDOWN = "false"
     }
   }
 }
