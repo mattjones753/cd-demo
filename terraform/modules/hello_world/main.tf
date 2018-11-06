@@ -58,6 +58,7 @@ resource "aws_lambda_function" "lambda" {
   handler          = "hello_world"
   runtime          = "go1.x"
   source_code_hash = "${base64sha256(file(local.path_to_lambda_artifact))}"
+
   vpc_config {
     security_group_ids = ["${aws_security_group.allow_all.id}"]
     subnet_ids         = ["${data.aws_subnet_ids.vpc_subnets.ids}"]
@@ -88,21 +89,26 @@ resource "aws_api_gateway_deployment" "hello_world_api_deployment" {
 resource "aws_iam_role" "lambda_role" {
   name = "hello_world_lambda_role"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+  assume_role_policy = "${data.aws_iam_policy_document.lambda_role_policy.json}"
 }
-EOF
+
+data "aws_iam_policy_document" "lambda_role_policy" {
+  statement {
+    actions = [
+      "sts:AssumeRole",
+      "ec2:CreateNetworkInterface",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DetachNetworkInterface",
+      "ec2:DeleteNetworkInterface",
+    ]
+
+    principals {
+      identifiers = ["lambda.amazonaws.com"]
+      type = "Service"
+    }
+
+    effect = "Allow"
+  }
 }
 
 resource "aws_security_group" "allow_all" {
