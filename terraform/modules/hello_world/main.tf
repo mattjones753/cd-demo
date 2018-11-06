@@ -59,7 +59,6 @@ resource "aws_lambda_function" "lambda" {
   runtime          = "go1.x"
   source_code_hash = "${base64sha256(file(local.path_to_lambda_artifact))}"
   vpc_config {
-    vpc_id             = "${var.aws_vpc_id}"
     security_group_ids = ["${aws_security_group.allow_all.id}"]
     subnet_ids         = ["${data.aws_subnet_ids.vpc_subnets.ids}"]
   }
