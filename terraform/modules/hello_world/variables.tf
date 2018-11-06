@@ -16,5 +16,5 @@ variable "artifact_directory" {
 
 variable "aws_subnets" {
   description = "the AWS subnets we are deploying into"
-  type = "list"
+  type        = "list"
 }

@@ -12,6 +12,7 @@ resource "aws_api_gateway_resource" "hello_world_root_api_resource" {
   parent_id   = "${aws_api_gateway_rest_api.hello_world_api.root_resource_id}"
   path_part   = "hello"
 }
+
 resource "aws_api_gateway_resource" "injector_api_proxy_resource" {
   rest_api_id = "${aws_api_gateway_rest_api.hello_world_api.id}"
   parent_id   = "${aws_api_gateway_resource.hello_world_root_api_resource.id}"
@@ -111,9 +112,9 @@ resource "aws_security_group" "allow_all" {
   }
 
   egress {
-    from_port = 0
-    protocol = "tcp"
-    to_port = 65535
+    from_port   = 0
+    protocol    = "tcp"
+    to_port     = 65535
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -129,17 +130,16 @@ resource "aws_db_subnet_group" "default" {
 }
 
 resource "aws_db_instance" "database" {
-  allocated_storage   = 10
-  storage_type        = "gp2"
-  engine              = "postgres"
-  engine_version      = "10.4"
-  instance_class      = "db.t2.micro"
-  name                = "postgres_db"
-  username            = "dbadmin"
-  password            = "rubbishpassword"
-  skip_final_snapshot = "true"
-  publicly_accessible = "false"
-  db_subnet_group_name = "${aws_db_subnet_group.default.name}"
+  allocated_storage      = 10
+  storage_type           = "gp2"
+  engine                 = "postgres"
+  engine_version         = "10.4"
+  instance_class         = "db.t2.micro"
+  name                   = "postgres_db"
+  username               = "dbadmin"
+  password               = "rubbishpassword"
+  skip_final_snapshot    = "true"
+  publicly_accessible    = "true"
   vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
-  apply_immediately = "true"
+  apply_immediately      = "true"
 }
