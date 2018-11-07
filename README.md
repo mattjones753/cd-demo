@@ -27,6 +27,8 @@ It assumes that the concourse setup has access to deploy AWS infrastructure nece
 
 To create the pipeline, you'll need to have your concourse instance setup and be logged in to a team that the pipeline will be run on.
 
+To easily spin up a concourse cluster see this repo: https://github.com/EngineerBetter/concourse-up
+
 To create the pipeline, you'll need to set some variables in a file `ci/concourse-variables.yml` as follows
 
 ```yaml
@@ -45,7 +47,9 @@ artifact_s3_bucket: artifact-s3-bucket-name
 # s3 prefix for lambda artifacts
 artifact_s3_key_prefix: artifacts/prefix
 # VPC id to deploy the database and lambdas to
-vpc_id: '["subnet-1-id","subnet-2-id"]'
+vpc_id: vpc-abc123
+# Database password
+db_pass: 'some password'
 ```
 
 then you can run the following `fly` command, replacing `<concourse_team>` with your concourse team name.

@@ -17,3 +17,7 @@ variable "artifact_directory" {
 variable "aws_vpc_id" {
   description = "the id of the AWS VPC we are deploying into"
 }
+
+variable "db_pass" {
+  description = "the password for the RDS instance"
+}

@@ -87,6 +87,7 @@ jobs:
         TF_VAR_aws_region: ((aws_region))
         TF_VAR_aws_vpc_id: ((aws_vpc_id))
         TF_VAR_aws_account_id: ((aws_account_id))
+        TF_VAR_db_pass: ((db_pass))
         TERRAFORM_BACKEND_BUCKET: ((terraform_backend_bucket))
         TERRAFORM_BACKEND_KEY: ((terraform_backend_key))
       run:
@@ -94,7 +95,6 @@ jobs:
         args:
         - -ec
         - |
-          export TF_VAR_aws_subnets='["subnet-097ea915cf4553693","subnet-08c412a31e1c70907","subnet-0c8fbac030695c103"]'
           export TF_VAR_artifact_directory=$(pwd)/artifacts
           export TERRAFORM_OUTPUT=$(pwd)/terraform_output
           cd git_repo/terraform/providers/aws/deployment_environment

@@ -177,7 +177,7 @@ resource "aws_db_instance" "database" {
   instance_class         = "db.t2.micro"
   name                   = "postgres_db"
   username               = "dbadmin"
-  password               = "rubbishpassword"
+  password               = "${var.db_pass}"
   skip_final_snapshot    = "true"
   publicly_accessible    = "false"
   vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]

@@ -19,4 +19,5 @@ module "hello-world" {
   aws_deployment_role_arn = "${var.aws_deployment_role_arn}"
   artifact_directory      = "${var.artifact_directory}"
   aws_vpc_id              = "${var.aws_vpc_id}"
+  db_pass                 = "${var.db_pass}"
 }
